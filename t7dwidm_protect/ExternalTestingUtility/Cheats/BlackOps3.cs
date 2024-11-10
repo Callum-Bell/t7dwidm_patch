@@ -46,7 +46,8 @@ namespace t7dwidm_protect.Cheats
         {
             try
             {
-                _ = Game.BaseProcess;
+                if (Game == null || Game.BaseProcess == null)
+                    return false;
             }
             catch
             {

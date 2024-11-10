@@ -43,9 +43,14 @@
             this.NameChangeTimer = new System.Windows.Forms.Timer(this.components);
             this.netpasstimer = new System.Windows.Forms.Timer(this.components);
             this.lbl_Status = new System.Windows.Forms.Label();
+            this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_LaunchGame = new System.Windows.Forms.Button();
+            this.btn_Settings = new FontAwesome.Sharp.IconButton();
             this.panel_MainButtons.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel_TitleBar
@@ -71,13 +76,15 @@
             // panel_MainButtons
             // 
             this.panel_MainButtons.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(38)))), ((int)(((byte)(46)))));
+            this.panel_MainButtons.Controls.Add(this.btn_Settings);
+            this.panel_MainButtons.Controls.Add(this.btn_LaunchGame);
             this.panel_MainButtons.Controls.Add(this.label3);
             this.panel_MainButtons.Controls.Add(this.panel2);
             this.panel_MainButtons.Controls.Add(this.label2);
             this.panel_MainButtons.Controls.Add(this.panel1);
             this.panel_MainButtons.Location = new System.Drawing.Point(21, 62);
             this.panel_MainButtons.Name = "panel_MainButtons";
-            this.panel_MainButtons.Size = new System.Drawing.Size(389, 150);
+            this.panel_MainButtons.Size = new System.Drawing.Size(389, 198);
             this.panel_MainButtons.TabIndex = 2;
             // 
             // label3
@@ -110,6 +117,7 @@
             this.txt_NetworkPassword.PasswordChar = '*';
             this.txt_NetworkPassword.Size = new System.Drawing.Size(333, 16);
             this.txt_NetworkPassword.TabIndex = 4;
+            this.txt_NetworkPassword.TextChanged += new System.EventHandler(this.txt_NetworkPassword_TextChanged);
             // 
             // label2
             // 
@@ -141,6 +149,7 @@
             this.txt_Username.Name = "txt_Username";
             this.txt_Username.Size = new System.Drawing.Size(333, 16);
             this.txt_Username.TabIndex = 3;
+            this.txt_Username.TextChanged += new System.EventHandler(this.txt_Username_TextChanged);
             // 
             // btnExit
             // 
@@ -172,18 +181,68 @@
             this.lbl_Status.AutoSize = true;
             this.lbl_Status.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.lbl_Status.ForeColor = System.Drawing.Color.White;
-            this.lbl_Status.Location = new System.Drawing.Point(4, 218);
+            this.lbl_Status.Location = new System.Drawing.Point(4, 266);
             this.lbl_Status.Name = "lbl_Status";
             this.lbl_Status.Size = new System.Drawing.Size(120, 15);
             this.lbl_Status.TabIndex = 5;
             this.lbl_Status.Text = "Game Not Launched";
+            // 
+            // contextMenu
+            // 
+            this.contextMenu.BackColor = System.Drawing.SystemColors.Control;
+            this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pluginsToolStripMenuItem});
+            this.contextMenu.Name = "contextMenu";
+            this.contextMenu.Size = new System.Drawing.Size(114, 26);
+            // 
+            // pluginsToolStripMenuItem
+            // 
+            this.pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
+            this.pluginsToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+            this.pluginsToolStripMenuItem.Text = "Plugins";
+            this.pluginsToolStripMenuItem.Click += new System.EventHandler(this.pluginsToolStripMenuItem_Click);
+            // 
+            // btn_LaunchGame
+            // 
+            this.btn_LaunchGame.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(53)))), ((int)(((byte)(63)))));
+            this.btn_LaunchGame.FlatAppearance.BorderSize = 0;
+            this.btn_LaunchGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_LaunchGame.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btn_LaunchGame.ForeColor = System.Drawing.Color.White;
+            this.btn_LaunchGame.Location = new System.Drawing.Point(16, 145);
+            this.btn_LaunchGame.Name = "btn_LaunchGame";
+            this.btn_LaunchGame.Size = new System.Drawing.Size(313, 38);
+            this.btn_LaunchGame.TabIndex = 9;
+            this.btn_LaunchGame.Text = "Play Black Ops 3 - Zombies";
+            this.btn_LaunchGame.UseVisualStyleBackColor = false;
+            this.btn_LaunchGame.Click += new System.EventHandler(this.btn_LaunchGame_Click);
+            // 
+            // btn_Settings
+            // 
+            this.btn_Settings.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(53)))), ((int)(((byte)(63)))));
+            this.btn_Settings.FlatAppearance.BorderSize = 0;
+            this.btn_Settings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_Settings.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btn_Settings.ForeColor = System.Drawing.Color.White;
+            this.btn_Settings.IconChar = FontAwesome.Sharp.IconChar.Gear;
+            this.btn_Settings.IconColor = System.Drawing.Color.White;
+            this.btn_Settings.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btn_Settings.IconSize = 26;
+            this.btn_Settings.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.btn_Settings.Location = new System.Drawing.Point(335, 145);
+            this.btn_Settings.Name = "btn_Settings";
+            this.btn_Settings.Size = new System.Drawing.Size(34, 38);
+            this.btn_Settings.TabIndex = 6;
+            this.btn_Settings.UseVisualStyleBackColor = false;
+            this.btn_Settings.Click += new System.EventHandler(this.btn_Settings_Click);
             // 
             // Form_Dashboard
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(42)))), ((int)(((byte)(49)))));
-            this.ClientSize = new System.Drawing.Size(432, 241);
+            this.ClientSize = new System.Drawing.Size(432, 287);
+            this.ContextMenuStrip = this.contextMenu;
             this.Controls.Add(this.lbl_Status);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.panel_MainButtons);
@@ -206,6 +265,7 @@
             this.panel2.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.contextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -226,5 +286,9 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.ContextMenuStrip contextMenu;
+        private System.Windows.Forms.ToolStripMenuItem pluginsToolStripMenuItem;
+        private System.Windows.Forms.Button btn_LaunchGame;
+        private FontAwesome.Sharp.IconButton btn_Settings;
     }
 }

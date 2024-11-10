@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -19,8 +20,9 @@ namespace t7dwidm_protect
         public Form_Dashboard()
         {
             InitializeComponent();
+            GamePlugins.Instance.Initialize();
+            var plugins = GamePlugins.Instance.GetPlugins();
         }
-
 
         private void Form_Dashboard_Load(object sender, EventArgs e)
         {
@@ -74,7 +76,7 @@ namespace t7dwidm_protect
             NameChangeTimer.Stop();
         }
 
-        private void CommitSettings()
+        public void CommitSettings()
         {
             var serializeOptions = new JsonSerializerOptions
             {
@@ -113,18 +115,6 @@ namespace t7dwidm_protect
             }
         }
 
-        private static byte[] ExtractResource(String filename)
-        {
-            System.Reflection.Assembly a = System.Reflection.Assembly.GetExecutingAssembly();
-            using (Stream resFilestream = a.GetManifestResourceStream(filename))
-            {
-                if (resFilestream == null) return null;
-                byte[] ba = new byte[resFilestream.Length];
-                resFilestream.Read(ba, 0, ba.Length);
-                return ba;
-            }
-        }
-
         ProcessModuleEx moduleHandle = null;
 
         private List<int> pidsOwned = new List<int>();
@@ -146,20 +136,24 @@ namespace t7dwidm_protect
                         // protect a new process if found
                         if (!pidsOwned.Contains(BlackOps3.Game.BaseProcess.Id))
                         {
-                            if (BlackOps3.Game.GetValue<long>(BlackOps3.Game[BlackOps3.Constants.OFF_GAME_READY]) == 0)
-                            {
-                                break;
-                            }
+                            // Access Plugins "Live"
+                            var gamePlugins = GamePlugins.Instance;
 
-                            if (!(BlackOps3.Game["zbr.dll"] is null)) // dont inject when its a zbr process
-                            {
-                                break;
-                            }
+                            if (BlackOps3.Game.GetValue<long>(BlackOps3.Game[BlackOps3.Constants.OFF_GAME_READY]) == 0) { break; }
 
-                            //if((BlackOps3.Game.GetValue<byte>(BlackOps3.Game[0x162E4410]) & 1) != 1) // ui loaded once
-                            //{
-                            //    break;
-                            //}
+                            if (!(BlackOps3.Game["zbr.dll"] is null)) { break; } // dont inject when its a zbr process
+
+                            if (BlackOps3.Game == null)
+                            {
+                                this.Invoke((MethodInvoker)(() =>
+                                {
+                                    lbl_Status.Text = "Failed To Start Game, Please Try Again.";
+                                    lbl_Status.ForeColor = Color.White;
+                                }));
+                                Console.WriteLine("BlackOps3.Game is null. Terminating process.");
+                                BlackOps3.Game.BaseProcess?.Kill();
+                                return;
+                            }
 
                             //// disable voice packet dispatching
                             BlackOps3.SetDvar("maxvoicepacketsperframe", "0");
@@ -167,24 +161,46 @@ namespace t7dwidm_protect
                             //// disable callvote
                             BlackOps3.SetDvar("sv_mapswitch", "0");
 
-                            if (true)
-                            {
-                                var bytes = ExtractResource("t7dwidm_protect.discord_game_sdk.dll");
-                                File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(BlackOps3.Game.BaseProcess.MainModule.FileName), "discord_game_sdk.dll"), bytes);
-                                moduleHandle = BlackOps3.Game.LoadAndRegisterDllRemote(Path.Combine(Environment.CurrentDirectory, "t7patch.dll"));
-                                BlackOps3.Game.LoadAndRegisterDllRemote(Path.Combine(Environment.CurrentDirectory, "zbr2.dll"));
-                                BlackOps3.Game.LoadAndRegisterDllRemote(Path.Combine(Environment.CurrentDirectory, "BO3-Mod-Check-Patch.dll"));
-                            }
-                            BlackOps3.Game.Call(moduleHandle["zbr_run_gamemode_lui"], "serious_anticrash_2023");
-                            BlackOps3.Game.Call(moduleHandle["SetPlayerName"], Settings.Playername);
-                            BlackOps3.Game.Call(moduleHandle["SetFriendsOnly"], Settings.IsFriendsOnly);
-                            BlackOps3.Game.Call(moduleHandle["SetNetworkPassword"], Settings.NetworkPassword);
+                            // Check if t7patch.dll is in the plugins list and load it first
+                            string t7PatchFileName = "t7patch.dll";
+                            string t7PatchPath = gamePlugins.GetPlugins().FirstOrDefault(p => Path.GetFileName(p) == t7PatchFileName);
 
-                            this.Invoke((MethodInvoker)(() =>
+                            if (t7PatchPath != null && File.Exists(t7PatchPath))
                             {
-                                lbl_Status.Text = "Protected Process with ID: " + BlackOps3.Game.BaseProcess.Id;
-                            }));
-                            pidsOwned.Add(BlackOps3.Game.BaseProcess.Id);
+                                moduleHandle = BlackOps3.Game.LoadAndRegisterDllRemote(t7PatchPath);
+                                BlackOps3.Game.Call(moduleHandle["zbr_run_gamemode_lui"], "serious_anticrash_2023");
+                                BlackOps3.Game.Call(moduleHandle["SetPlayerName"], Settings.Playername);
+                                BlackOps3.Game.Call(moduleHandle["SetFriendsOnly"], Settings.IsFriendsOnly);
+                                BlackOps3.Game.Call(moduleHandle["SetNetworkPassword"], Settings.NetworkPassword);
+                            }
+
+
+                            if (t7PatchPath != null && File.Exists(t7PatchPath))
+                            {
+                                this.Invoke((MethodInvoker)(() =>
+                                {
+                                    lbl_Status.Text = "T7 Protected Process with ID: " + BlackOps3.Game.BaseProcess.Id;
+                                    lbl_Status.ForeColor = Color.White;
+                                }));
+                                pidsOwned.Add(BlackOps3.Game.BaseProcess.Id);
+                            }
+                            else
+                            {
+                                this.Invoke((MethodInvoker)(() =>
+                                {
+                                    lbl_Status.Text = "[Unprotected] Injected Process with ID: " + BlackOps3.Game.BaseProcess.Id;
+                                    lbl_Status.ForeColor = Color.Red;
+                                }));
+                            }
+
+                            // Load the remaining plugins
+                            foreach (var pluginPath in gamePlugins.GetPlugins())
+                            {
+                                if (pluginPath.Equals(t7PatchPath, StringComparison.OrdinalIgnoreCase))
+                                    continue;
+
+                                BlackOps3.Game.LoadAndRegisterDllRemote(pluginPath);
+                            }
                         }
                     } while (false);
                 }
@@ -272,6 +288,48 @@ namespace t7dwidm_protect
         {
             public override string ConvertName(string name) =>
                 name.ToLower();
+        }
+
+        private void pluginsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new Plugins(GamePlugins.Instance, Settings, this))
+                {
+                    form.ShowDialog();
+                }
+            }
+            catch { Debug.WriteLine("Unknown Error with Settings Options"); }
+        }
+
+        private void txt_Username_TextChanged(object sender, EventArgs e)
+        {
+            NameChangeTimer.Stop();
+            NameChangeTimer.Start();
+        }
+
+        private void txt_NetworkPassword_TextChanged(object sender, EventArgs e)
+        {
+            netpasstimer.Stop();
+            netpasstimer.Start();
+        }
+
+        private void btn_LaunchGame_Click(object sender, EventArgs e)
+        {
+            try { Process.Start("steam://rungameid/311210"); }
+            catch { MessageBox.Show("Unable To Launch Game, Try Open The Game Via Steam"); }
+        }
+
+        private void btn_Settings_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new Plugins(GamePlugins.Instance, Settings, this))
+                {
+                    form.ShowDialog();
+                }
+            }
+            catch { Debug.WriteLine("Unknown Error with Settings Options"); }
         }
     }
 }
